@@ -22,7 +22,8 @@ After you complete your program, please create a proposal for how you would depl
 
 
 ## Run
-`node fractionCalc.js`
+`npm start` // Help text displays
+`npm start 1/5 + 1_4/6` // Arguments for calculation
 
 ## Dev
 Created using node 14.16.0.

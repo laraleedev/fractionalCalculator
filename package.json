@@ -8,7 +8,8 @@
     "lint_fix": "npx eslint --fix .",
     "postinstall": "npm run prepare",
     "prepare": "husky install",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node -e \"require('./fractionCalc').main()\"",
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -21,10 +22,13 @@
   },
   "homepage": "https://github.com/laraleedev/fractionalCalculator#readme",
   "devDependencies": {
+    "chai": "^4.3.4",
     "eslint": "^7.32.0",
     "eslint-config-semistandard": "^16.0.0",
     "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-chai-friendly": "^0.7.2",
     "eslint-plugin-import": "^2.24.0",
+    "eslint-plugin-mocha": "^9.0.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
     "husky": "^7.0.1",
