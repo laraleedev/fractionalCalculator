@@ -44,6 +44,12 @@ describe('argsAreValid()', function () {
     expect(!!result).to.be.false;
   });
 
+  it('should return falsy for negative operand', function () { // Possible future feature to add
+    const result = fractionCalc.argsAreValid(['node', '-1', '+', '1']);
+
+    expect(!!result).to.be.false;
+  });
+
   it('should return truthy for subtraction', function () {
     const result = fractionCalc.argsAreValid(['node', '1_1/6', '-', '8123/7']);
 

@@ -4,6 +4,7 @@
   "description": "Fractional calculator coding challenge",
   "main": "fractionCalc.js",
   "scripts": {
+    "doc": "npx jsdoc fractionCalc.js",
     "lint": "npx eslint .",
     "lint_fix": "npx eslint --fix .",
     "postinstall": "npm run prepare",
@@ -32,6 +33,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
     "husky": "^7.0.1",
+    "jsdoc": "^3.6.7",
     "mocha": "^9.0.3"
   }
 }
