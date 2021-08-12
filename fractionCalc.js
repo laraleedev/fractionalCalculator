@@ -1,4 +1,5 @@
 /** @module fractionCalc */
+const inquirer = require('inquirer');
 
 /** @namespace */
 const fractionCalc = {
@@ -6,13 +7,23 @@ const fractionCalc = {
    * Checks cli arguments for alignment to rules
    * Initially checks for # of args
    *
-   * @param {string[]} args - Array of argument strings from cli
+   * @param {string} input - User input after prompt
    * @returns {boolean} true if args are in expected form, false if not
    */
-  argsAreValid: function (args) {
-    if (!Array.isArray(args) || args.length !== 4) {
-      return false;
-    }
+  argsAreValid: function (input) {
+    const errorStr = `
+    Fractional Calculator
+    
+    Accepts space deliminated arguments in the form of operators (+, -, *, /)
+    and operands (whole numbers, fractions, improper fractions, mixed numbers).
+    Order should be operand operator operand.
+    Mixed numbers should be in the form whole_numerator/denominator
+
+    Examples: 
+        npm start 3/4 + 1/2
+        npm start 1 * 1_4/5
+        npm start 7/6 / 5/4
+    `;
 
     function validOperand (operand) {
     // Checks specific case of mixed number not having full fractional component
@@ -33,7 +44,13 @@ const fractionCalc = {
       return operator.match(/[+\-*/]/);
     }
 
-    return validOperand(args[1]) && validOperator(args[2]) && validOperand(args[3]);
+    const args = input.split(' ');
+
+    if (!Array.isArray(args) || args.length !== 3) {
+      return errorStr;
+    }
+
+    return !!(validOperand(args[0]) && validOperator(args[1]) && validOperand(args[2])) || errorStr;
   },
 
   /**
@@ -77,7 +94,7 @@ const fractionCalc = {
    * @param {number} fraction.denominator
    * @param {boolean} fraction.negative - If true, fraction is negative
    * @returns {object} Original fraction if no changes, or just a numerator if reduces cleanly,
-   *                   or mixed number
+   *                   or mixed number object
    *
    */
   convertToMixed: function (fraction) {
@@ -99,32 +116,18 @@ const fractionCalc = {
   },
 
   /**
-   * Handles displaying help text
+   * Handles displaying result
    *
-   * @param {string} result - If given, displays result. Otherwise shows help text
+   * @param {object} result
+   * @param {number} result.numerator
+   * @param {number} result.denominator
+   * @param {boolean} result.negative - true if negative, falsy if not
+   * @param {number} result.whole - integer value of a mixed number if given
    */
   displayText: function (result) {
-    const helpText = `
-      Fractional Calculator
-      
-      Accepts space deliminated arguments in the form of operators (+, -, *, /)
-      and operands (whole numbers, fractions, improper fractions, mixed numbers).
-      Order should be operand operator operand.
-      Mixed numbers should be in the form whole_numerator/denominator
-  
-      Examples: 
-          npm start 3/4 + 1/2
-          npm start 1 * 1_4/5
-          npm start 7/6 / 5/4
-      `;
-
-    if (result) {
-      console.log(`
-        = ${result.negative ? '-' : ''}${result.whole ? result.whole + '_' : ''}${result.numerator}${result.denominator ? '/' + result.denominator : ''};
-      `);
-    } else {
-      console.log(helpText);
-    }
+    console.log(`
+      = ${result.negative ? '-' : ''}${result.whole ? result.whole + '_' : ''}${result.numerator}${result.denominator ? '/' + result.denominator : ''};
+    `);
   },
 
   /**
@@ -145,36 +148,51 @@ const fractionCalc = {
 
   /**
    * Starting point. Processes args, figures out which operation is being performed,
-   * displays result
+   * sends result to be displayed
    */
   main: function () {
-    let result;
-    if (!this.argsAreValid(process.argv)) {
-      this.displayText();
-    } else {
-      const args = [...process.argv]; // Clone array, we're going to modify it
-      args.shift(); // remove non operator/operand
+    inquirer
+      .prompt([
+        {
+          name: 'equation',
+          message: '?',
+          validate: this.argsAreValid
+        }
+      ])
+      .then((answers) => {
+        let result;
+        const args = answers.equation.split(' ');
 
-      switch (args[1]) {
-        case '+':
-          result = this.performAddition(args);
-          break;
-        case '-':
-          result = this.performAddition(args, true);
-          break;
-        case '*':
-          result = this.performMultiplication(args);
-          break;
-        case '/':
-          result = this.performMultiplication(args, true);
-          break;
-        default:
-          this.displayHelp();
-          break;
-      }
+        switch (args[1]) {
+          case '+':
+            result = this.performAddition(args);
+            break;
+          case '-':
+            result = this.performAddition(args, true);
+            break;
+          case '*':
+            result = this.performMultiplication(args);
+            break;
+          case '/':
+            result = this.performMultiplication(args, true);
+            break;
+          default:
+            this.displayHelp();
+            break;
+        }
 
-      this.displayText(result);
-    }
+        this.displayText(result);
+      })
+      .catch((error) => {
+        console.log('error ', error);
+        if (error.isTtyError) {
+        // Prompt couldn't be rendered in the current environment
+
+        } else {
+        // Something else went wrong
+          console.log('asldkjf ');
+        }
+      });
   },
 
   /**
@@ -254,7 +272,7 @@ const fractionCalc = {
     * @returns {string} Result of calculation
    */
   performMultiplication: function (args, division) {
-
+    console.log('multiplication args ', args);
   }
 };
 
