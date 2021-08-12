@@ -97,4 +97,10 @@ describe('argsAreValid()', function () {
 
     expect(!!result).to.be.false;
   });
+
+  it('should return falsy for decimals', function () {
+    const result = fractionCalc.argsAreValid(['node', '3.1231', '+', '3']);
+
+    expect(!!result).to.be.false;
+  });
 });
