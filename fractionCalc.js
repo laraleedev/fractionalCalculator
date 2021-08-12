@@ -68,11 +68,34 @@ const fractionCalc = {
   },
 
   /**
+   * Takes a fraction object with num/denom/negative bool,
+   * checks if it can be converted to mixed. Returns mixed value
+   * if converted
    *
+   * @param {object} fraction
+   * @param {number} fraction.numerator
+   * @param {number} fraction.denominator
+   * @param {boolean} fraction.negative - If true, fraction is negative
+   * @returns {object} Original fraction if no changes, or just a numerator if reduces cleanly,
+   *                   or mixed number
    *
    */
-  convertToMixed: function () {
+  convertToMixed: function (fraction) {
+    const converted = {};
+    converted.negative = fraction.negative;
+    const decimalForm = fraction.numerator / fraction.denominator;
 
+    if (Number.isInteger(decimalForm)) {
+      converted.numerator = fraction.numerator / fraction.denominator;
+    } else if (decimalForm > 1) {
+      converted.whole = parseInt(fraction.numerator / fraction.denominator, 10);
+      converted.numerator = fraction.numerator % fraction.denominator;
+      converted.denominator = fraction.denominator;
+    } else { // Less than 1, no changes required
+      return fraction;
+    }
+
+    return converted;
   },
 
   /**
@@ -97,7 +120,7 @@ const fractionCalc = {
 
     if (result) {
       console.log(`
-        = ${result.negative ? '-' : ''}${result.numerator}/${result.denominator};
+        = ${result.negative ? '-' : ''}${result.whole ? result.whole + '_' : ''}${result.numerator}${result.denominator ? '/' + result.denominator : ''};
       `);
     } else {
       console.log(helpText);
@@ -157,6 +180,11 @@ const fractionCalc = {
   /**
    * Handles addition and subtraction, which is just addition on a bad day (cause it's just negative)
    *
+   * Future stuff:
+   * - handling negative numbers should be as simple as flagging a fraction as negative,
+   * then after finding common denominator, putting the negative back onto the numerator calculation.
+   * Requires upgrading input validation first
+   *
    * @param {string[]} args - Array of validated argument strings from cli
    * @param {boolean} subtract - If true, performs subtraction. Addition when false
    * @returns {string} Result of calculation
@@ -175,6 +203,7 @@ const fractionCalc = {
     convertToLowestCommonDenominator(args[0], lowestCommonDenom);
     convertToLowestCommonDenominator(args[2], lowestCommonDenom);
 
+    // Actual addition/subtraction calculation is done
     const result = {
       numerator: args[0].numerator + ((subtract ? -1 : 1) * args[2].numerator),
       denominator: lowestCommonDenom
@@ -187,12 +216,18 @@ const fractionCalc = {
       result.numerator = Math.abs(result.numerator);
     }
 
+    // Simplify fraction
     const reducedFraction = this.reduceFraction(result);
     reducedFraction.negative = result.negative;
 
-    return reducedFraction;
+    return this.convertToMixed(reducedFraction);
   },
 
+  /**
+   *
+   * @param {*} fractionArr
+   * @returns
+   */
   reduceFraction: function (fractionArr) {
     // https://stackoverflow.com/a/23575406
     // Ancient mathematician helping out
@@ -212,7 +247,7 @@ const fractionCalc = {
   },
 
   /**
-   * Handles multiplication and
+   * Handles multiplication and division
    *
    * @param {string[]} args - Array of validated argument strings from cli
    * @param {*} division
