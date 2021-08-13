@@ -1,35 +1,30 @@
 /** @module fractionCalc */
-const inquirer = require('inquirer');
+const inquirer = require("inquirer");
 
 /** @namespace */
 const fractionCalc = {
   /**
-   * Checks cli arguments for alignment to rules
-   * Initially checks for # of args
+   * Type definition
+   * @typedef {Object} FractionObj
+   * @property {number} numerator
+   * @property {number} [denominator]
+   * @property {boolean} [negative] - True if fraction is negative, falsy otherwise
+   * @property {number} [whole] - The integer part of the mixed number, if it exists
+   */
+
+  /**
+   * Checks prompted input for alignment to rules
+   * Initially splits by space and checks for exactly 3 arguments
    *
    * @param {string} input - User input after prompt
    * @returns {boolean} true if args are in expected form, false if not
    */
   argsAreValid: function (input) {
-    const errorStr = `
-    Fractional Calculator
-    
-    Accepts space deliminated arguments in the form of operators (+, -, *, /)
-    and operands (whole numbers, fractions, improper fractions, mixed numbers).
-    Order should be operand operator operand.
-    Mixed numbers should be in the form whole_numerator/denominator
-
-    Examples: 
-        npm start 3/4 + 1/2
-        npm start 1 * 1_4/5
-        npm start 7/6 / 5/4
-    `;
-
     function validOperand (operand) {
     // Checks specific case of mixed number not having full fractional component
     // Adds protection against something like 1_0/1 or 0_1/1
       if (operand.match(/_/)) {
-        if (!operand.split('_')[1].match(/^[1-9][0-9]*\/[1-9][0-9]*$/)) {
+        if (!operand.split("_")[1].match(/^[1-9][0-9]*\/[1-9][0-9]*$/)) {
           return false;
         }
       }
@@ -44,13 +39,26 @@ const fractionCalc = {
       return operator.match(/[+\-*/]/);
     }
 
-    const args = input.split(' ');
+    const errorText = `
+    Fractional Calculator
+    
+    Accepts space deliminated arguments in the form of operators (+, -, *, /)
+    and operands (whole numbers, fractions, improper fractions, mixed numbers).
+    Order should be operand operator operand.
+    Mixed numbers should be in the form whole_numerator/denominator
 
-    if (!Array.isArray(args) || args.length !== 3) {
-      return errorStr;
+    Examples: 
+        3/4 + 1/2
+        1 * 1_4/5
+        7/6 / 5/4
+    `;
+    const args = input.split(" ");
+
+    if (args.length !== 3) {
+      return errorText;
     }
 
-    return !!(validOperand(args[0]) && validOperator(args[1]) && validOperand(args[2])) || errorStr;
+    return !!(validOperand(args[0]) && validOperator(args[1]) && validOperand(args[2])) || errorText;
   },
 
   /**
@@ -58,20 +66,20 @@ const fractionCalc = {
    * Whole number times the denominator plus the original numerator
    *
    * @param {string} operand - Operand validated to be in right format
-   * @returns {string} Operand converted to improper fraction form, if it was mixed
+   * @returns {{numerator: number, denominator: number}}} Operand converted to improper fraction form, if it was mixed
    */
   convertToFraction: function (operand) {
     const impFrac = {};
 
     if (operand.match(/_/)) { // Mixed numbers handling
-      const [whole, fraction] = operand.split('_');
-      const [numerator, denominator] = fraction.split('/');
+      const [whole, fraction] = operand.split("_");
+      const [numerator, denominator] = fraction.split("/");
 
       impFrac.numerator = ((parseInt(whole, 10) * parseInt(denominator, 10)) + parseInt(numerator, 10));
       impFrac.denominator = parseInt(denominator, 10);
-    } else if (operand.match('/')) {
+    } else if (operand.match("/")) {
       // already a fraction
-      const splitOperand = operand.split('/');
+      const splitOperand = operand.split("/");
 
       impFrac.numerator = parseInt(splitOperand[0], 10);
       impFrac.denominator = parseInt(splitOperand[1], 10);
@@ -92,15 +100,17 @@ const fractionCalc = {
    * @param {object} fraction
    * @param {number} fraction.numerator
    * @param {number} fraction.denominator
-   * @param {boolean} fraction.negative - If true, fraction is negative
-   * @returns {object} Original fraction if no changes, or just a numerator if reduces cleanly,
-   *                   or mixed number object
-   *
+   * @param {boolean} [fraction.negative] - If true, fraction is negative
+   * @returns {FractionObj} Original fraction if no changes, or just a numerator if reduces cleanly,
+   *                         or mixed number object
    */
   convertToMixed: function (fraction) {
     const converted = {};
-    converted.negative = fraction.negative;
     const decimalForm = fraction.numerator / fraction.denominator;
+
+    if (fraction.negative) {
+      converted.negative = fraction.negative;
+    }
 
     if (Number.isInteger(decimalForm)) {
       converted.numerator = fraction.numerator / fraction.denominator;
@@ -116,7 +126,7 @@ const fractionCalc = {
   },
 
   /**
-   * Handles displaying result
+   * Handles displaying result of calculation
    *
    * @param {object} result
    * @param {number} result.numerator
@@ -125,18 +135,25 @@ const fractionCalc = {
    * @param {number} result.whole - integer value of a mixed number if given
    */
   displayText: function (result) {
-    console.log(`
-      = ${result.negative ? '-' : ''}${result.whole ? result.whole + '_' : ''}${result.numerator}${result.denominator ? '/' + result.denominator : ''};
-    `);
+    const negativeAndWhole =
+      (result.negative ? "-" : "") +
+      (result.whole ? result.whole + "_" : "");
+
+    const denominator = result.denominator ? "/" + result.denominator : "";
+
+    console.log(`= ${negativeAndWhole}${result.numerator}${denominator}`);
   },
 
   /**
+   * Calculates lowest common denominator between two denominators
    *
-   *
+   * @param {number} denom1 - Denominator 1
+   * @param {number} denom2 - Denominator 2
+   * @returns {number} Lowest common denominator
    */
-  findLowestCommonDenominator: function (op1, op2) {
-    const lowerDenom = Math.min(op1, op2);
-    const iterator = Math.max(op1, op2); // Use the higher denominator to iterate up with
+  findLowestCommonDenominator: function (denom1, denom2) {
+    const lowerDenom = Math.min(denom1, denom2);
+    const iterator = Math.max(denom1, denom2); // Use the higher denominator to iterate up with
     let x = iterator;
 
     while (x % lowerDenom > 0) {
@@ -147,50 +164,47 @@ const fractionCalc = {
   },
 
   /**
-   * Starting point. Processes args, figures out which operation is being performed,
+   * Starting point. Launches prompt, processes user input, figures out which operation is being performed,
    * sends result to be displayed
    */
   main: function () {
     inquirer
       .prompt([
         {
-          name: 'equation',
-          message: '?',
+          name: "equation",
+          message: "?",
           validate: this.argsAreValid
         }
       ])
       .then((answers) => {
         let result;
-        const args = answers.equation.split(' ');
+        const args = answers.equation.split(" ");
+        const operator = args.splice(1, 1);
 
-        switch (args[1]) {
-          case '+':
+        switch (operator[0]) {
+          case "+":
             result = this.performAddition(args);
             break;
-          case '-':
+          case "-":
             result = this.performAddition(args, true);
             break;
-          case '*':
+          case "*":
             result = this.performMultiplication(args);
             break;
-          case '/':
+          case "/":
             result = this.performMultiplication(args, true);
             break;
-          default:
-            this.displayHelp();
+          default: // Issues should be caught before this in the arg validation
+            console.log(this.helpText);
             break;
         }
 
         this.displayText(result);
       })
       .catch((error) => {
-        console.log('error ', error);
+        console.log("Error with prompt logic", error);
         if (error.isTtyError) {
-        // Prompt couldn't be rendered in the current environment
-
-        } else {
-        // Something else went wrong
-          console.log('asldkjf ');
+          console.log("TTY error");
         }
       });
   },
@@ -198,81 +212,92 @@ const fractionCalc = {
   /**
    * Handles addition and subtraction, which is just addition on a bad day (cause it's just negative)
    *
-   * Future stuff:
-   * - handling negative numbers should be as simple as flagging a fraction as negative,
-   * then after finding common denominator, putting the negative back onto the numerator calculation.
-   * Requires upgrading input validation first
-   *
    * @param {string[]} args - Array of validated argument strings from cli
    * @param {boolean} subtract - If true, performs subtraction. Addition when false
-   * @returns {string} Result of calculation
+   * @returns {FractionObj} Result of calculation
    */
   performAddition: function (args, subtract) {
+    // Only useful for addition/subtraction
     function convertToLowestCommonDenominator (fractionArr, lcd) {
       fractionArr.numerator = (lcd / fractionArr.denominator) * fractionArr.numerator;
       fractionArr.denominator = lcd;
     }
 
     args[0] = this.convertToFraction(args[0]);
-    args[2] = this.convertToFraction(args[2]);
+    args[1] = this.convertToFraction(args[1]);
 
-    const lowestCommonDenom = this.findLowestCommonDenominator(args[0].denominator, args[2].denominator);
+    const lowestCommonDenom = this.findLowestCommonDenominator(args[0].denominator, args[1].denominator);
 
     convertToLowestCommonDenominator(args[0], lowestCommonDenom);
-    convertToLowestCommonDenominator(args[2], lowestCommonDenom);
+    convertToLowestCommonDenominator(args[1], lowestCommonDenom);
 
     // Actual addition/subtraction calculation is done
-    const result = {
-      numerator: args[0].numerator + ((subtract ? -1 : 1) * args[2].numerator),
+    const addResult = {
+      numerator: args[0].numerator + ((subtract ? -1 : 1) * args[1].numerator),
       denominator: lowestCommonDenom
     };
 
     // handle negative result
-    result.negative = Math.sign(result.numerator) < 0;
+    addResult.negative = Math.sign(addResult.numerator) < 0;
 
-    if (result.negative) {
-      result.numerator = Math.abs(result.numerator);
+    if (addResult.negative) {
+      addResult.numerator = Math.abs(addResult.numerator);
     }
 
     // Simplify fraction
-    const reducedFraction = this.reduceFraction(result);
-    reducedFraction.negative = result.negative;
+    const reducedFraction = this.reduceFraction(addResult);
+    reducedFraction.negative = addResult.negative;
 
     return this.convertToMixed(reducedFraction);
-  },
-
-  /**
-   *
-   * @param {*} fractionArr
-   * @returns
-   */
-  reduceFraction: function (fractionArr) {
-    // https://stackoverflow.com/a/23575406
-    // Ancient mathematician helping out
-
-    const gcd = function (a, b) {
-      if (!b) return a;
-
-      return gcd(b, a % b);
-    };
-
-    const divisor = gcd(fractionArr.numerator, fractionArr.denominator);
-
-    return {
-      numerator: fractionArr.numerator / divisor,
-      denominator: fractionArr.denominator / divisor
-    };
   },
 
   /**
    * Handles multiplication and division
    *
    * @param {string[]} args - Array of validated argument strings from cli
-   * @param {*} division
-    * @returns {string} Result of calculation
+   * @param {boolean} division - True if dividing, falsy if multiplying
+   * @returns {FractionObj} Result of calculation
    */
   performMultiplication: function (args, division) {
-    console.log('multiplication args ', args);
+    args[0] = this.convertToFraction(args[0]);
+    args[1] = this.convertToFraction(args[1]);
+
+    // 1/4 / 1/2 === 1/4 * 2/1
+    const multiplyResult = {
+      numerator: args[0].numerator * (division ? args[1].denominator : args[1].numerator),
+      denominator: args[0].denominator * (division ? args[1].numerator : args[1].denominator)
+    };
+
+    // Simplify fraction
+    const reducedFraction = this.reduceFraction(multiplyResult);
+
+    return this.convertToMixed(reducedFraction);
+  },
+
+  /**
+   * Simplifies/reduces fractions
+   * https://stackoverflow.com/a/23575406
+   * Ancient mathematician's algorithm
+   *
+   * @param {object} fractionObj
+   * @param {number} fractionObj.numerator
+   * @param {number} fractionObj.denominator
+   * @returns {object} Numerator and denominator
+   */
+  reduceFraction: function (fractionObj) {
+    // gcd = greatest common denominator
+    const gcd = function (a, b) {
+      if (!b) return a;
+
+      return gcd(b, a % b);
+    };
+
+    const divisor = gcd(fractionObj.numerator, fractionObj.denominator);
+
+    return {
+      numerator: fractionObj.numerator / divisor,
+      denominator: fractionObj.denominator / divisor
+    };
   }
 };
 

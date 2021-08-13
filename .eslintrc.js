@@ -4,19 +4,20 @@ module.exports = {
     es2021: true
   },
   extends: [
-    'plugin:mocha/recommended',
-    'semistandard'
+    "plugin:mocha/recommended",
+    "semistandard"
   ],
   parserOptions: {
     ecmaVersion: 12,
-    sourceType: 'module'
+    sourceType: "module"
   },
   plugins: [
-    'chai-friendly',
-    'mocha'
+    "chai-friendly",
+    "mocha"
   ],
   rules: {
-    'no-unused-expressions': 0,
-    'chai-friendly/no-unused-expressions': 2
+    "chai-friendly/no-unused-expressions": 2,
+    "no-unused-expressions": 0,
+    quotes: [2, "double"]
   }
 };

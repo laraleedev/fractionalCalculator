@@ -10,7 +10,7 @@
     "postinstall": "npm run prepare",
     "prepare": "husky install",
     "start": "node -e \"require('./fractionCalc').main()\"",
-    "test": "mocha"
+    "test": "nyc mocha unit/**/*.spec.js"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,9 @@
     "eslint-plugin-promise": "^5.1.0",
     "husky": "^7.0.1",
     "jsdoc": "^3.6.7",
-    "mocha": "^9.0.3"
+    "mocha": "^9.0.3",
+    "nyc": "^15.1.0",
+    "sinon": "^11.1.2"
   },
   "dependencies": {
     "inquirer": "^8.1.2"

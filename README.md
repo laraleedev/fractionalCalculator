@@ -21,8 +21,8 @@ After you complete your program, please create a proposal for how you would depl
 
 ## Run
 ```
-npm start // Help text displays
-npm start 1/5 + 1_4/6 // Arguments for calculation
+npm ci // install dependencies, triggers husky install via postinstall script
+npm start
 ```
 
 ## Dev
@@ -40,6 +40,8 @@ Can fire tests off manually via
 npm test
 ```
 
+Unit test coverage provided by https://github.com/istanbuljs/nyc
+
 ### Documentation
 ```
 npm run doc // Generates jsdoc documentation
@@ -50,4 +52,4 @@ npm run doc // Generates jsdoc documentation
 - Negative numbers: Not explicitly defined in the original challenge definition, but a likely candidate for _a future release_. Would require more time with the regexes to handle. Tested to be an invalid argument for now. Does not (currently) allow negative numbers, fractional or otherwise.
     - results can be negative (through subtraction), this is handled
     - Potential way to handle it: check for and flag for negative input, then check the rest of the input as normal (with negative removed)
-- Why not interactable prompts: Looked into using something like https://www.npmjs.com/package/prompt or child_process, but decided to have it as argv instead to make it a better candidate for seamlessly integrating into an automation pipeline (such as allowing other processes to call and use it rapidly)
+- unit tests: main() is missing unit tests. Need more time for stubbing/spying if unit tested, or could be tested via e2e/integration tests
